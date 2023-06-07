@@ -68,7 +68,7 @@ fn generate_random_char(allow_symbols: bool) -> char {
     let chars_lower = "abcdefghijklmnopqrstuvwxyz";
     let chars_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     let chars_digits = "0123456789";
-    let chars_symbols = "!@#$%^&*()";
+    let chars_symbols = "!#$%^&";
 
     let mut chars: String = format!("{}{}", chars_lower, chars_upper);
     if allow_symbols {
