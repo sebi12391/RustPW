@@ -2,6 +2,8 @@ use std::env;
 use std::fs::OpenOptions;
 use std::io::{self, BufRead, Write};
 
+use rand::Rng;
+
 const PASSWORD_FILE: &str = "passwords.txt";
 
 fn main() {
@@ -43,45 +45,117 @@ fn get_master_password() -> String {
 }
 
 fn generate_password() {
-    println!("Generating a password...");
+    println!("Enter the password size:");
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    let size: usize = input.trim().parse().expect("Invalid size input.");
 
-    // Your password generation logic goes here
-    let generated_password = "MyGeneratedPassword123";
+    println!("Allow symbols? (y/n)");
+    input.clear();
+    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    let allow_symbols = input.trim().eq_ignore_ascii_case("y");
 
-    println!("Generated password: {}", generated_password);
+    let password: String = (0..size)
+        .map(|_| generate_random_char(allow_symbols))
+        .collect();
+
+    println!("Generated password: {}", password);
+}
+
+fn generate_random_char(allow_symbols: bool) -> char {
+    let mut rng = rand::thread_rng();
+
+    let chars_lower = "abcdefghijklmnopqrstuvwxyz";
+    let chars_upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let chars_digits = "0123456789";
+    let chars_symbols = "!@#$%^&*()";
+
+    let mut chars: String = format!("{}{}", chars_lower, chars_upper);
+    if allow_symbols {
+        chars.push_str(chars_digits);
+        chars.push_str(chars_symbols);
+    } else {
+        chars.push_str(chars_digits);
+    }
+
+    let chars_len = chars.len();
+    let idx = rng.gen_range(0..chars_len);
+    chars.chars().nth(idx).unwrap()
+}
+
+
+struct PasswordEntry {
+    website: String,
+    username: String,
+    password: String,
 }
 
 fn add_password(master_password: &str) {
-    println!("Enter the password to add:");
+    println!("Enter the website:");
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("Failed to read input.");
-    let password = input.trim();
+    let website = input.trim().to_owned();
+
+    println!("Enter the username:");
+    input.clear();
+    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    let username = input.trim().to_owned();
+
+    println!("Enter the password:");
+    input.clear();
+    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    let password = input.trim().to_owned();
 
     if verify_master_password(master_password) {
+        let password_entry = PasswordEntry {
+            website,
+            username,
+            password,
+        };
+
         let mut file = OpenOptions::new()
-            .create(true) // Create the file if it doesn't exist
+            .create(true)
             .append(true)
             .open(PASSWORD_FILE)
             .expect("Failed to open password file.");
-        writeln!(file, "{}", password).expect("Failed to write to password file.");
+
+        writeln!(file, "{},{},{}", password_entry.website, password_entry.username, password_entry.password)
+            .expect("Failed to write to password file.");
+
         println!("Password added successfully.");
     } else {
         println!("Incorrect master password. Access denied.");
     }
 }
 
+fn parse_password_entry(line: &str) -> Option<PasswordEntry> {
+    let parts: Vec<&str> = line.split(',').collect();
+    if parts.len() == 3 {
+        let website = parts[0].to_owned();
+        let username = parts[1].to_owned();
+        let password = parts[2].to_owned();
+        Some(PasswordEntry {
+            website,
+            username,
+            password,
+        })
+    } else {
+        None
+    }
+}
 
 fn remove_password(master_password: &str) {
-    println!("Enter the password to remove:");
+    println!("Enter the website:");
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("Failed to read input.");
-    let password = input.trim();
+    let website = input.trim().to_owned();
 
     if verify_master_password(master_password) {
         let file = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
             .expect("Failed to open password file.");
+
         let passwords: Vec<String> = io::BufReader::new(file)
             .lines()
             .map(|line| line.unwrap())
@@ -89,12 +163,15 @@ fn remove_password(master_password: &str) {
 
         let updated_passwords: Vec<String> = passwords
             .into_iter()
-            .filter(|p| p != password)
+            .filter(|line| {
+                let entry = parse_password_entry(line);
+                entry.is_some() && entry.unwrap().website != website
+            })
             .collect();
 
         let mut file = OpenOptions::new()
             .write(true)
-            .truncate(true) // Clear the file before rewriting
+            .truncate(true)
             .open(PASSWORD_FILE)
             .expect("Failed to open password file.");
 
@@ -102,7 +179,7 @@ fn remove_password(master_password: &str) {
             writeln!(file, "{}", password).expect("Failed to write to password file.");
         }
 
-        println!("Password removed successfully.");
+        println!("Passwords for the website '{}' removed successfully.", website);
     } else {
         println!("Incorrect master password. Access denied.");
     }
@@ -111,21 +188,34 @@ fn remove_password(master_password: &str) {
 
 fn display_passwords(master_password: &str) {
     if verify_master_password(master_password) {
-        let file = OpenOptions::new()
+        let file_exists = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
-            .expect("Failed to open password file.");
-        let passwords: Vec<String> = io::BufReader::new(file)
-            .lines()
-            .map(|line| line.unwrap())
-            .collect();
-        println!("Password list:");
-        for password in passwords {
-            println!("{}", password);
+            .is_ok();
+
+        if file_exists {
+            let file = OpenOptions::new()
+                .read(true)
+                .open(PASSWORD_FILE)
+                .expect("Failed to open password file.");
+
+            let passwords: Vec<String> = io::BufReader::new(file)
+                .lines()
+                .map(|line| line.unwrap())
+                .collect();
+
+            if passwords.is_empty() {
+                println!("There are no passwords to display.");
+            } else {
+                println!("Password List:");
+                for password in passwords {
+                    println!("{}", password);
+                }
+            }
+        } else {
+            println!("There are no passwords to display.");
         }
-    } else {
-        println!("Incorrect master password. Access denied.");
-    }
+    }else { println!("Incorrect master password. Access denied."); }
 }
 
 fn verify_master_password(master_password: &str) -> bool {
