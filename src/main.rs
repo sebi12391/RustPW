@@ -2,6 +2,7 @@ use std::env;
 use std::fs::OpenOptions;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
+
 use anyhow::{Result, bail};
 use yafo::pipeline::ProgressReporter;
 use yafo::{Cipher, DecryptState, EncryptState, KeyInit, Pipeline};
@@ -9,7 +10,15 @@ use rand::Rng;
 
 
 const PASSWORD_FILE: &str = "passwords.txt";
-const YAFO_FILE_EXTENSION: &str = ".yafo";
+const ENCRYPTED_PASSWORD_FILE: &str = "passwords.txt.SK";
+const YAFO_FILE_EXTENSION: &str = ".SK";
+const SILENT: bool = true;
+
+struct PasswordEntry {
+    website: String,
+    username: String,
+    password: String,
+}
 
 fn main() {
     // Get master password
@@ -130,14 +139,10 @@ fn generate_random_char(allow_symbols: bool) -> char {
     chars.chars().nth(idx).unwrap()
 }
 
-
-struct PasswordEntry {
-    website: String,
-    username: String,
-    password: String,
-}
-
 fn add_password(master_password: &str) {
+
+    decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+
     println!("Enter the website:");
     let mut input = String::new();
     io::stdin().read_line(&mut input).expect("Failed to read input.");
@@ -170,6 +175,7 @@ fn add_password(master_password: &str) {
             .expect("Failed to write to password file.");
 
         println!("Password added successfully.");
+        encrypt_file(PASSWORD_FILE, master_password, SILENT);
     } else {
         println!("Incorrect master password. Access denied.");
     }
@@ -198,6 +204,7 @@ fn remove_password(master_password: &str) {
     let website = input.trim().to_owned();
 
     if verify_master_password(master_password) {
+        decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
         let file = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
@@ -227,6 +234,7 @@ fn remove_password(master_password: &str) {
         }
 
         println!("Passwords for the website '{}' removed successfully.", website);
+        encrypt_file(PASSWORD_FILE, master_password, SILENT);
     } else {
         println!("Incorrect master password. Access denied.");
     }
@@ -235,6 +243,7 @@ fn remove_password(master_password: &str) {
 
 fn display_passwords(master_password: &str) {
     if verify_master_password(master_password) {
+        decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
         let file_exists = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
@@ -259,6 +268,7 @@ fn display_passwords(master_password: &str) {
                     println!("{}", password);
                 }
             }
+            encrypt_file(PASSWORD_FILE, master_password, SILENT);
         } else {
             println!("There are no passwords to display.");
         }
