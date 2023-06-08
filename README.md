@@ -22,42 +22,35 @@ A command-line password manager implemented in Rust. This program allows you to 
 
    ```bash
    git clone <replace_with_repo_link>
-
-2. Change to the project directory:
-
+```
+2. Change to the Project Directory:
 ```bash
 cd rust-password-manager
 ```
-3. Usage
-
-1. Compile and Run the program:
-
+### Usage
+1. Compile and run the program:
 ```bash
-
 cargo build
 cargo run
 ```
-Run the program:
+2. Follow the instructions in the program to perform various operations:
 
-3.
-### Follow the instructions in the program to perform various operations:
+Generate a password
+Add password to file
+Remove password from file
+Display password list
+Close the program
 
-1. Generate a password
-2. Add password to file
-3. Remove password from file
-4. Display password list
-5. Close the program
 ## Dependencies
-This program does not rely on external crates or dependencies. It uses the standard libraries provided by Rust.
+This program relies on the following external crates:
+anyhow = "1.0.71"
+rand = "0.8.5"
+yafo = "0.1.1"
+Make sure to include these dependencies in your `Cargo.toml` file.
 
 ### To-Do List
-🔲 Implement encryption and decryption of the password file.
+🔲️ Implement encryption and decryption of the password file.
 🔲️ Improve error handling and user feedback.
-☑️Add unit tests for different functions.
+☑️ Add unit tests for different functions.
 ☑️ Implement command-line arguments for customizing the program behavior.
 ☑️ Add support for exporting and importing password data.
-## Contributing
-Contributions are welcome! If you find any issues or have suggestions for improvement, please open an issue or submit a pull request.
-
-## License
-This project is licensed under the MIT License.
