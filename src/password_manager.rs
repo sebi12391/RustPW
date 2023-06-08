@@ -1,11 +1,9 @@
-use std::{fs, io};
-use std::fs::OpenOptions;
-use std::io::{BufRead, Write};
+use std::fs::{self, OpenOptions};
+use std::io::{self, BufRead, Write};
 use std::path::Path;
 
+use super::encryption;
 use anyhow::{Result, bail};
-use yafo::pipeline::ProgressReporter;
-use yafo::{Cipher, DecryptState, EncryptState, KeyInit};
 use rand::Rng;
 
 const PASSWORD_FILE: &str = "passwords.txt";
@@ -44,7 +42,7 @@ pub fn generate_password() {
     println!("Generated password: {}", password);
 }
 
-pub fn generate_random_char(allow_symbols: bool) -> char {
+fn generate_random_char(allow_symbols: bool) -> char {
     let mut rng = rand::thread_rng();
 
     let chars_lower = "abcdefghijklmnopqrstuvwxyz";
@@ -66,7 +64,7 @@ pub fn generate_random_char(allow_symbols: bool) -> char {
 }
 
 pub fn add_password(master_password: &str) {
-    decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+    encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
 
     println!("Enter the website:");
     let mut input = String::new();
@@ -100,7 +98,7 @@ pub fn add_password(master_password: &str) {
             .expect("Failed to write to password file.");
 
         println!("Password added successfully.");
-        encrypt_file(PASSWORD_FILE, master_password, SILENT);
+        encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
     } else {
         println!("Incorrect master password. Access denied.");
     }
@@ -113,7 +111,7 @@ pub fn remove_password(master_password: &str) {
     let website = input.trim().to_owned();
 
     if verify_master_password(master_password) {
-        decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+        encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
         let file = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
@@ -143,7 +141,7 @@ pub fn remove_password(master_password: &str) {
         }
 
         println!("Passwords for the website '{}' removed successfully.", website);
-        encrypt_file(PASSWORD_FILE, master_password, SILENT);
+        encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
     } else {
         println!("Incorrect master password. Access denied.");
     }
@@ -151,7 +149,7 @@ pub fn remove_password(master_password: &str) {
 
 pub fn display_passwords(master_password: &str) {
     if verify_master_password(master_password) {
-        decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+        encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
         let file_exists = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
@@ -176,42 +174,9 @@ pub fn display_passwords(master_password: &str) {
                     println!("{}", password);
                 }
             }
-            encrypt_file(PASSWORD_FILE, master_password, SILENT);
+            encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
         } else {
             println!("There are no passwords to display.");
         }
-    } else {
-        println!("Incorrect master password. Access denied.");
-    }
-}
-
-fn is_encrypted_text(text: &str) -> bool {
-    // Use the string of characters above
-    let allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&";
-
-    for c in text.chars() {
-        if !allowed_chars.contains(c) {
-            return true; // Encrypted text detected
-        }
-    }
-
-    false // Not encrypted text
-}
-
-pub fn verify_master_password(input: &str) -> bool {
-    // Your master password verification logic goes here
-    // You can compare the given master_password with the expected value
-    // For simplicity, we're assuming the master password is "password"
-    decrypt_file(ENCRYPTED_PASSWORD_FILE, input, SILENT);
-    if let Ok(content) = fs::read_to_string("passwords.txt") {
-        if is_encrypted_text(&content) {
-            println!("The content of the 'passwords.txt' file appears to be encrypted.");
-            encrypt_file(ENCRYPTED_PASSWORD_FILE, input, SILENT);
-        } else {
-            println!("Correct Password");
-        }
-    } else {
-        println!("Failed to read the 'passwords.txt' file.");
-    }
-    input == "password"
+    }else { println!("Incorrect master password. Access denied."); }
 }

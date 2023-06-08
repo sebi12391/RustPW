@@ -3,8 +3,10 @@ use std::io;
 mod password_manager;
 
 fn main() {
+    // Get master password
     let master_password = password_manager::get_master_password();
 
+    // Process user commands
     loop {
         println!("Enter a command (1-5):");
         println!("1. Generate a password");
