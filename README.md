@@ -61,6 +61,3 @@ Contributions are welcome! If you find any issues or have suggestions for improv
 
 ## License
 This project is licensed under the MIT License.
-
-
- You can save the above content in a file named `README.md` in your project directory.

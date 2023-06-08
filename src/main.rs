@@ -1,4 +1,4 @@
-use std::env;
+use std::{env, fs};
 use std::fs::OpenOptions;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
@@ -35,7 +35,12 @@ fn main() {
 
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("Failed to read input.");
+        verify_master_password(&input);
+            // run Decryption on input
+
         let command = input.trim().parse::<u32>().unwrap_or(0);
+
+// Add logic for checking if it's the correct password
 
         match command {
             1 => generate_password(),
@@ -128,6 +133,7 @@ fn generate_random_char(allow_symbols: bool) -> char {
 
     let mut chars: String = format!("{}{}", chars_lower, chars_upper);
     if allow_symbols {
+
         chars.push_str(chars_digits);
         chars.push_str(chars_symbols);
     } else {
@@ -252,6 +258,7 @@ fn display_passwords(master_password: &str) {
         if file_exists {
             let file = OpenOptions::new()
                 .read(true)
+
                 .open(PASSWORD_FILE)
                 .expect("Failed to open password file.");
 
@@ -275,9 +282,33 @@ fn display_passwords(master_password: &str) {
     }else { println!("Incorrect master password. Access denied."); }
 }
 
-fn verify_master_password(master_password: &str) -> bool {
+fn is_encrypted_text(text: &str) -> bool {
+    // Use the string of characters above
+    let allowed_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%^&";
+
+    for c in text.chars() {
+        if !allowed_chars.contains(c) {
+            return true; // Encrypted text detected
+        }
+    }
+
+    false // Not encrypted text
+}
+
+fn verify_master_password(input: &str) -> bool {
     // Your master password verification logic goes here
     // You can compare the given master_password with the expected value
     // For simplicity, we're assuming the master password is "password"
-    master_password == "password"
+    decrypt_file(ENCRYPTED_PASSWORD_FILE, input, SILENT);
+    if let Ok(content) = fs::read_to_string("passwords.txt") {
+        if is_encrypted_text(&content) {
+            println!("The content of the 'passwords.txt' file appears to be encrypted.");
+            encrypt_file(ENCRYPTED_PASSWORD_FILE, input, SILENT);
+        } else {
+            println!("Correct Password");
+        }
+    } else {
+        println!("Failed to read the 'passwords.txt' file.");
+    }
+    input == "password"
 }
