@@ -8,7 +8,6 @@ use super::encryption;
 
 const PASSWORD_FILE: &str = "passwords.txt";
 const ENCRYPTED_PASSWORD_FILE: &str = "passwords.txt.SK";
-const YAFO_FILE_EXTENSION: &str = ".SK";
 const SILENT: bool = true;
 
 struct PasswordEntry {
@@ -27,7 +26,7 @@ pub fn get_master_password() -> String {
 //TEMPORARY PLEASE PROPERLY IMPLEMENT SOON
 pub fn verify_master_password(master_password: &str) -> bool {
     // Decrypt
-    encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+    let _ = encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
 
     // Check if the passwords.txt file exists
     let file_exists = OpenOptions::new()
@@ -37,7 +36,7 @@ pub fn verify_master_password(master_password: &str) -> bool {
 
     if !file_exists {
         // Create the passwords.txt file
-        let file = match OpenOptions::new().create(true).write(true).open(PASSWORD_FILE) {
+        let _file = match OpenOptions::new().create(true).write(true).open(PASSWORD_FILE) {
             Ok(file) => file,
             Err(error) => {
                 println!("Error creating passwords file: {}", error);
@@ -51,7 +50,7 @@ pub fn verify_master_password(master_password: &str) -> bool {
         Ok(content) => content,
         Err(error) => {
             println!("Error reading passwords file: {}", error);
-            encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+            let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
             return false;
         }
     };
@@ -64,12 +63,12 @@ pub fn verify_master_password(master_password: &str) -> bool {
 
     if contains_garbage {
         // Encrypt and return false
-        encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+        let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
 
         false
     } else {
         // Re-encrypt and return true
-        encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+        let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
 
         true
     }
@@ -131,7 +130,7 @@ pub fn add_password(master_password: &str) {
     let password = input.trim().to_owned();
 
 
-    encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+    let _ = encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
     let password_entry = PasswordEntry {
         website,
         username,
@@ -148,7 +147,7 @@ pub fn add_password(master_password: &str) {
         .expect("Failed to write to password file.");
 
     println!("Password added successfully.");
-    encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+    let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
 }
 
 fn parse_password_entry(line: &str) -> Option<PasswordEntry> {
@@ -174,7 +173,7 @@ pub fn remove_password(master_password: &str) {
     io::stdin().read_line(&mut input).expect("Failed to read input.");
     let website = input.trim().to_owned();
 
-    encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+    let _ = encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
     let file = OpenOptions::new()
         .read(true)
         .open(PASSWORD_FILE)
@@ -205,11 +204,11 @@ pub fn remove_password(master_password: &str) {
 
 
     println!("Passwords for the website '{}' removed successfully.", website);
-    encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+    let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
 }
 
 pub fn display_passwords(master_password: &str) {
-    encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
+    let _ = encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
     let file_exists = OpenOptions::new()
         .read(true)
         .open(PASSWORD_FILE)
@@ -234,7 +233,7 @@ pub fn display_passwords(master_password: &str) {
                 println!("{}", password);
             }
         }
-        encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+        let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
     } else {
         println!("There are no passwords to display.");
     }

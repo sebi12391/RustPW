@@ -3,11 +3,7 @@ use std::path::Path;
 use anyhow::{bail, Result};
 use yafo::{DecryptState, EncryptState, Pipeline, KeyInit};
 
-
-const PASSWORD_FILE: &str = "passwords.txt";
-const ENCRYPTED_PASSWORD_FILE: &str = "passwords.txt.SK";
 const YAFO_FILE_EXTENSION: &str = ".SK";
-const SILENT: bool = true;
 
 pub fn encrypt_file(file_path: &str, key: &str, silent: bool) -> Result<()> {
     let path = Path::new(file_path);
