@@ -1,6 +1,7 @@
 use std::io;
 
 mod password_manager;
+mod encryption;
 
 fn main() {
     // Get master password

@@ -1,10 +1,8 @@
-use std::fs::{self, OpenOptions};
-use std::io::{self, BufRead, Write};
 use std::path::Path;
 
 use anyhow::{bail, Result};
-use yafo::pipeline::ProgressReporter;
-use yafo::{Cipher, DecryptState, EncryptState, Pipeline};
+use yafo::{DecryptState, EncryptState, Pipeline, KeyInit};
+
 
 const PASSWORD_FILE: &str = "passwords.txt";
 const ENCRYPTED_PASSWORD_FILE: &str = "passwords.txt.SK";
