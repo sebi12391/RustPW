@@ -25,7 +25,7 @@ pub fn get_master_password() -> String {
 }
 
 //TEMPORARY PLEASE IMPLEMENT SOON
-fn verify_master_password(password: &str) -> bool {
+pub fn verify_master_password(password: &str) -> bool {
     true
 }
 
