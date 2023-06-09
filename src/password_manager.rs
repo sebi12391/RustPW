@@ -24,6 +24,11 @@ pub fn get_master_password() -> String {
     input.trim().to_owned()
 }
 
+//TEMPORARY PLEASE IMPLEMENT SOON
+fn verify_master_password(password: &str) -> bool {
+    true
+}
+
 pub fn generate_password() {
     println!("Enter the password size:");
     let mut input = String::new();
