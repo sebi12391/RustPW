@@ -69,7 +69,6 @@ fn generate_random_char(allow_symbols: bool) -> char {
 }
 
 pub fn add_password(master_password: &str) {
-    encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
 
     println!("Enter the website:");
     let mut input = String::new();
@@ -87,6 +86,7 @@ pub fn add_password(master_password: &str) {
     let password = input.trim().to_owned();
 
     if verify_master_password(master_password) {
+        encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
         let password_entry = PasswordEntry {
             website,
             username,
