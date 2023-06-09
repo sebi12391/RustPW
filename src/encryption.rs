@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::{bail, Result};
-use yafo::{DecryptState, EncryptState, Pipeline, KeyInit};
+use yafo::{DecryptState, EncryptState, KeyInit, Pipeline};
 
 const YAFO_FILE_EXTENSION: &str = ".SK";
 

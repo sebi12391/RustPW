@@ -1,14 +1,19 @@
-use std::io;
+use std::{io, thread};
+use std::time::Duration;
+
+use crate::password_manager::clear_screen;
 
 mod password_manager;
 mod encryption;
 
 fn main() {
     // Get master password
+    clear_screen();
     let master_password = password_manager::get_master_password();
 
     // Process user commands
-    if password_manager::verify_master_password(&master_password) == true{
+    if password_manager::verify_master_password(&master_password) == true {
+        clear_screen();
         loop {
             println!("Enter a command (1-5):");
             println!("1. Generate a password");
@@ -35,6 +40,7 @@ fn main() {
             }
         }
     } else {
-        println!("Invalid Master Password, quitting")
+        println!("Invalid Master Password, quitting in 5 seconds");
+        thread::sleep(Duration::from_secs(5));
     }
 }

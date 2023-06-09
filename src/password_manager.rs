@@ -1,6 +1,7 @@
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{self, BufRead, Write};
+use std::process::Command;
 
 use rand::Rng;
 
@@ -16,14 +17,25 @@ struct PasswordEntry {
     password: String,
 }
 
+//This was the only way I found to get screen clearing to work
+pub fn clear_screen() {
+    if cfg!(target_os = "windows") {
+        // On Windows
+        Command::new("cmd").arg("/c").arg("cls").status().unwrap();
+    } else {
+        // On Unix-like systems (Linux, macOS, etc.)
+        Command::new("clear").status().unwrap();
+    }
+}
+
 pub fn get_master_password() -> String {
     println!("Enter the master password:");
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
+    clear_screen();
     input.trim().to_owned()
 }
 
-//TEMPORARY PLEASE PROPERLY IMPLEMENT SOON
 pub fn verify_master_password(master_password: &str) -> bool {
     // Decrypt
     let _ = encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
@@ -39,57 +51,45 @@ pub fn verify_master_password(master_password: &str) -> bool {
         let _file = match OpenOptions::new().create(true).write(true).open(PASSWORD_FILE) {
             Ok(file) => file,
             Err(error) => {
-                println!("Error creating passwords file: {}", error);
+                clear_screen();
+                println!("Error creating passwords file: {}\n", error);
                 return false;
             }
         };
     }
 
     // Read the decrypted text from the file
-    let decrypted_text = match fs::read_to_string(PASSWORD_FILE) {
+    let _decrypted_text = match fs::read_to_string(PASSWORD_FILE) {
         Ok(content) => content,
         Err(error) => {
-            println!("Error reading passwords file: {}", error);
+            clear_screen();
+            println!("Error reading passwords file: {}\n", error);
             let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
             return false;
         }
     };
 
-    // Check for garbage characters (NOT NEEDED SINCE ITS NOT VALID UTF-8 I think...)
-    let garbage_char_list = vec!["Ô","Ó","¾","‰","™","®","¿","Ž","þ","Ç"];
-
-    // Check if the decrypted text contains any garbage characters (NOT NEEDED SINCE ITS NOT VALID UTF-8 I think...)
-    let contains_garbage = garbage_char_list.iter().any(|garbage| decrypted_text.contains(garbage));
-
-    if contains_garbage {
-        // Encrypt and return false
-        let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
-
-        false
-    } else {
-        // Re-encrypt and return true
-        let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
-
-        true
-    }
+    let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
+    return true;
 }
 
 pub fn generate_password() {
     println!("Enter the password size:");
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
-    let size: usize = input.trim().parse().expect("Invalid size input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
+    let size: usize = input.trim().parse().expect("Invalid size input.\n");
 
     println!("Allow symbols? (y/n)");
     input.clear();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
     let allow_symbols = input.trim().eq_ignore_ascii_case("y");
 
     let password: String = (0..size)
         .map(|_| generate_random_char(allow_symbols))
         .collect();
 
-    println!("Generated password: {}", password);
+    clear_screen();
+    println!("Generated password: {}\n", password);
 }
 
 fn generate_random_char(allow_symbols: bool) -> char {
@@ -116,17 +116,17 @@ fn generate_random_char(allow_symbols: bool) -> char {
 pub fn add_password(master_password: &str) {
     println!("Enter the website:");
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
     let website = input.trim().to_owned();
 
     println!("Enter the username:");
     input.clear();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
     let username = input.trim().to_owned();
 
     println!("Enter the password:");
     input.clear();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
     let password = input.trim().to_owned();
 
 
@@ -141,12 +141,13 @@ pub fn add_password(master_password: &str) {
         .create(true)
         .append(true)
         .open(PASSWORD_FILE)
-        .expect("Failed to open password file.");
+        .expect("Failed to open password file.\n");
 
     writeln!(file, "{},{},{}", password_entry.website, password_entry.username, password_entry.password)
-        .expect("Failed to write to password file.");
+        .expect("Failed to write to password file.\n");
 
-    println!("Password added successfully.");
+    clear_screen();
+    println!("Password added successfully.\n");
     let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
 }
 
@@ -170,14 +171,14 @@ fn parse_password_entry(line: &str) -> Option<PasswordEntry> {
 pub fn remove_password(master_password: &str) {
     println!("Enter the website:");
     let mut input = String::new();
-    io::stdin().read_line(&mut input).expect("Failed to read input.");
+    io::stdin().read_line(&mut input).expect("Failed to read input.\n");
     let website = input.trim().to_owned();
 
     let _ = encryption::decrypt_file(ENCRYPTED_PASSWORD_FILE, master_password, SILENT);
     let file = OpenOptions::new()
         .read(true)
         .open(PASSWORD_FILE)
-        .expect("Failed to open password file.");
+        .expect("Failed to open password file.\n");
 
     let passwords: Vec<String> = io::BufReader::new(file)
         .lines()
@@ -196,14 +197,15 @@ pub fn remove_password(master_password: &str) {
         .write(true)
         .truncate(true)
         .open(PASSWORD_FILE)
-        .expect("Failed to open password file.");
+        .expect("Failed to open password file.\n");
 
     for password in updated_passwords {
-        writeln!(file, "{}", password).expect("Failed to write to password file.");
+        writeln!(file, "{}", password).expect("Failed to write to password file.\n");
     }
 
 
-    println!("Passwords for the website '{}' removed successfully.", website);
+    clear_screen();
+    println!("Passwords for the website '{}' removed successfully.\n", website);
     let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
 }
 
@@ -218,7 +220,7 @@ pub fn display_passwords(master_password: &str) {
         let file = OpenOptions::new()
             .read(true)
             .open(PASSWORD_FILE)
-            .expect("Failed to open password file.");
+            .expect("Failed to open password file.\n");
 
         let passwords: Vec<String> = io::BufReader::new(file)
             .lines()
@@ -226,15 +228,19 @@ pub fn display_passwords(master_password: &str) {
             .collect();
 
         if passwords.is_empty() {
-            println!("There are no passwords to display.");
+            clear_screen();
+            println!("There are no passwords to display.\n");
         } else {
+            clear_screen();
             println!("Password List:");
             for password in passwords {
                 println!("{}", password);
             }
+            println!();
         }
         let _ = encryption::encrypt_file(PASSWORD_FILE, master_password, SILENT);
     } else {
-        println!("There are no passwords to display.");
+        clear_screen();
+        println!("There are no passwords to display.\n");
     }
 }
