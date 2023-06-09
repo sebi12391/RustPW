@@ -104,6 +104,23 @@ pub fn add_password(master_password: &str) {
     }
 }
 
+fn parse_password_entry(line: &str) -> Option<PasswordEntry> {
+    let parts: Vec<&str> = line.split(',').collect();
+    if parts.len() == 3 {
+        let website = parts[0].to_owned();
+        let username = parts[1].to_owned();
+        let password = parts[2].to_owned();
+        Some(PasswordEntry {
+            website,
+            username,
+            password,
+        })
+    } else {
+        None
+    }
+}
+
+
 pub fn remove_password(master_password: &str) {
     println!("Enter the website:");
     let mut input = String::new();
