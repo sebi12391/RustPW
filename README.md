@@ -2,7 +2,7 @@
 
 # RustPW
 
-A command-line password manager implemented in Rust. This program allows you to generate, store, and manage passwords securely. The password file is encrypted and can only be viewed when the program decrypts it with the master password.
+A command-line password manager implemented in Rust. This program allows you to generate, store, and manage passwords securely. The password file is encrypted and can only be viewed when the program decrypts it with the master password.\
 **Note: This was written for a school final project, this shouldnt be used as real password manager as there's flaws in the security of this program.**
 
 ## Features
